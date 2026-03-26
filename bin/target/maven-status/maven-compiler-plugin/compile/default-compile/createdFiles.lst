@@ -1,0 +1,16 @@
+local\tools\proto\ProtoCompiler.class
+local\tools\proto\SchemaCache.class
+local\tools\proto\App$CompileResponse.class
+local\tools\proto\SchemaCache$Entry.class
+local\tools\proto\Decoder$EncodeResult.class
+local\tools\proto\App$EncodeResponse.class
+local\tools\proto\Decoder$OutputFormat.class
+local\tools\proto\App$OkResponse.class
+local\tools\proto\App.class
+local\tools\proto\ProtoRegistry.class
+local\tools\proto\App$DecodeResponse.class
+local\tools\proto\Decoder$DecodeResult.class
+local\tools\proto\ProtoCompiler$CompileResult.class
+local\tools\proto\DecodeMode.class
+local\tools\proto\Decoder$1.class
+local\tools\proto\Decoder.class

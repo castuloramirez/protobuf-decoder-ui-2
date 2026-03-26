@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Protobuf Decoder (Local)</title>
+  <style>
+    :root{
+      --bg: #eaf3fb;
+      --panel: #ffffff;
+      --bar: #1b76b6;
+      --barText: #ffffff;
+      --border: #cfd8e3;
+      --muted: #6b7787;
+      --shadow: 0 6px 18px rgba(0,0,0,.12);
+      --btn: #1b76b6;
+      --btnText: #fff;
+      --btn2: #e9f3fb;
+      --btn2Text: #1b76b6;
+      --codebg: #0b1220;
+      --codetext: #e6edf3;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: #1b2533;
+    }
+
+    /* Top bar (protobufpal-ish) */
+    .topbar{
+      height: 54px;
+      background: var(--bar);
+      color: var(--barText);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 18px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+    .brand .logo{
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.18);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 15px;
+    }
+    .nav a{
+      color: rgba(255,255,255,.95);
+      text-decoration:none;
+      margin-left: 16px;
+      font-size: 14px;
+    }
+    .nav a:hover{ text-decoration: underline; }
+
+    /* Layout */
+    .wrap{
+      max-width: 1400px;
+      margin: 14px auto;
+      padding: 0 14px 18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr 340px 1.1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      overflow:hidden;
+    }
+    .panel .title{
+      background: #eef2f7;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #314055;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel .body{
+      padding: 10px;
+    }
+
+    textarea, pre, select, input{
+      width: 100%;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+    textarea{
+      height: 340px;
+      resize: vertical;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      background: #fff;
+    }
+    pre{
+      height: 340px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow:auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #fff;
+    }
+
+    /* Center controls */
+    .centerCard{
+      padding: 12px;
+    }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin: 8px 0 10px;
+    }
+    label{
+      font-size: 12px;
+      color:#3b4b63;
+      display:block;
+      margin: 10px 0 6px;
+      font-weight: 600;
+    }
+    select, input[type="text"]{
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background:#fff;
+      outline:none;
+    }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button{
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .btnPrimary{
+      background: var(--btn);
+      color: var(--btnText);
+    }
+    .btnSecondary{
+      background: var(--btn2);
+      color: var(--btn2Text);
+      border-color: #b8d6ee;
+    }
+    .btnWide{
+      grid-column: 1 / -1;
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Bottom panel */
+    .bottom{
+      margin-top: 14px;
+    }
+    .tabs{
+      display:flex;
+      gap: 6px;
+      align-items:center;
+    }
+    .tab{
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      background: var(--btn);
+      color:#fff;
+      border-color: var(--btn);
+    }
+
+    .status{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      min-height: 18px;
+    }
+
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr; }
+      textarea, pre{ height: 260px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">☁</div>
+    <div>Protobufpal (Local)</div>
+  </div>
+  <div class="nav">
+    <a href="#about">About</a>
+    <a href="#howto">How To</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT: Encoded -->
+    <div class="panel">
+      <div class="title">
+        <span>Encoded Message</span>
+        <div class="tabs">
+          <div class="tab active" id="tabBase64" onclick="setInputMode('BASE64')">Base64</div>
+          <div class="tab" id="tabHex" onclick="setInputMode('HEX')">Hex</div>
+        </div>
+      </div>
+      <div class="body">
+        <textarea id="payload" placeholder="Enter encoded message (Base64)"></textarea>
+        <div class="status" id="leftStatus"></div>
+      </div>
+    </div>
+
+    <!-- CENTER: Controls -->
+    <div class="panel">
+      <div class="title">Controls</div>
+      <div class="body centerCard">
+        <label>Message type</label>
+        <select id="types"></select>
+
+        <div class="hint">
+          This tool uses a pre-generated <code>all.desc</code> (FileDescriptorSet). It does not compile .proto in the browser.
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Decode mode</label>
+            <select id="mode">
+              <option value="AUTO">AUTO</option>
+              <option value="RAW">RAW</option>
+              <option value="GRPC">GRPC</option>
+              <option value="DELIMITED_VARINT">DELIMITED_VARINT</option>
+            </select>
+          </div>
+          <div>
+            <label>Output</label>
+            <select id="format">
+              <option value="JSON">JSON</option>
+              <option value="TEXT">TEXT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <button class="btnPrimary" onclick="decode()">Decode</button>
+          <button class="btnSecondary" onclick="copyOut()">Copy Output</button>
+
+          <button class="btnSecondary" onclick="clearAll()">Clear</button>
+          <button class="btnSecondary" onclick="pasteFromClipboard()">Paste</button>
+
+          <button class="btnSecondary btnWide" onclick="normalizeInput()">Normalize input (strip spaces/newlines)</button>
+        </div>
+
+        <div class="status" id="centerStatus"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Decoded -->
+    <div class="panel">
+      <div class="title">Decoded Message</div>
+      <div class="body">
+        <pre id="out">Enter decoded message (JSON)</pre>
+        <div class="status" id="rightStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel bottom" id="about">
+    <div class="title">About</div>
+    <div class="body">
+      <div style="font-size:13px; color:#3b4b63; line-height:1.5">
+        Local protobuf decoder using <b>DynamicMessage</b> + a pre-built descriptor set (<code>all.desc</code>).<br/>
+        Tip: If RAW fails, try <b>GRPC</b> (5-byte framing) or <b>DELIMITED_VARINT</b> (varint length prefix).
+      </div>
+    </div>
+  </div>
+
+  <div class="panel bottom" id="howto">
+    <div class="title">How To</div>
+    <div class="body">
+      <div style="font-size:13px; color:#3b4b63; line-height:1.5">
+        Generate the descriptor set with:<br/>
+        <code>protoc --include_imports --descriptor_set_out=all.desc -I path/to/protos path/to/protos/*.proto</code><br/>
+        Place it at <code>src/main/resources/protos/all.desc</code> or run with <code>--desc</code>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let inputMode = "BASE64";
+
+  function setInputMode(mode){
+    inputMode = mode;
+    document.getElementById("tabBase64").classList.toggle("active", mode==="BASE64");
+    document.getElementById("tabHex").classList.toggle("active", mode==="HEX");
+
+    const ph = mode==="BASE64"
+            ? "Enter encoded message (Base64)"
+            : "Enter encoded message (Hex) e.g. 0A0BFF...";
+    document.getElementById("payload").placeholder = ph;
+
+    // update label text
+    document.querySelector(".panel .title span").textContent = "Encoded Message";
+  }
+
+  async function loadTypes() {
+    const sel = document.getElementById('types');
+    sel.innerHTML = '<option>Loading...</option>';
+    try {
+      const res = await fetch('/api/types');
+      const types = await res.json();
+      sel.innerHTML = '';
+      for (const t of types) {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      }
+      setStatus('centerStatus', `Loaded ${types.length} message types.`);
+    } catch (e) {
+      setStatus('centerStatus', 'Failed to load message types: ' + e, true);
+    }
+  }
+
+  function setStatus(id, msg, isErr=false){
+    const el = document.getElementById(id);
+    el.textContent = msg || '';
+    el.style.color = isErr ? '#b00020' : '';
+  }
+
+  function normalizeInput(){
+    const t = document.getElementById("payload");
+    t.value = (t.value || "").replace(/\s+/g,'').trim();
+    setStatus('leftStatus', 'Normalized input (removed whitespace).');
+  }
+
+  function clearAll(){
+    document.getElementById("payload").value = "";
+    document.getElementById("out").textContent = "Enter decoded message (JSON)";
+    setStatus('leftStatus', '');
+    setStatus('centerStatus', '');
+    setStatus('rightStatus', '');
+  }
+
+  async function pasteFromClipboard(){
+    try{
+      const text = await navigator.clipboard.readText();
+      document.getElementById("payload").value = text || "";
+      setStatus('leftStatus', 'Pasted from clipboard.');
+    }catch(e){
+      setStatus('leftStatus', 'Clipboard paste not available: ' + e, true);
+    }
+  }
+
+  async function copyOut(){
+    try{
+      const text = document.getElementById("out").textContent || "";
+      await navigator.clipboard.writeText(text);
+      setStatus('rightStatus', 'Copied output to clipboard.');
+    }catch(e){
+      setStatus('rightStatus', 'Copy failed: ' + e, true);
+    }
+  }
+
+  function hexToBase64(hex){
+    const clean = (hex || "").replace(/[^0-9a-fA-F]/g,'');
+    if(clean.length % 2 !== 0) throw new Error("Hex length must be even");
+    const bytes = new Uint8Array(clean.length/2);
+    for(let i=0;i<bytes.length;i++){
+      bytes[i] = parseInt(clean.substr(i*2,2),16);
+    }
+    let bin = "";
+    for(const b of bytes){ bin += String.fromCharCode(b); }
+    return btoa(bin);
+  }
+
+  async function decode() {
+    const type = document.getElementById('types').value;
+    const mode = document.getElementById('mode').value;
+    const format = document.getElementById('format').value;
+    const out = document.getElementById('out');
+    setStatus('centerStatus', '');
+    setStatus('rightStatus', '');
+
+    let payload = document.getElementById('payload').value || "";
+    payload = payload.trim();
+    if(!payload){
+      setStatus('leftStatus', 'Payload is empty.', true);
+      return;
+    }
+
+    // If HEX tab is active, convert to base64 before sending
+    let base64ToSend = payload;
+    if(inputMode === "HEX"){
+      try{
+        base64ToSend = hexToBase64(payload);
+        setStatus('leftStatus', 'Converted HEX → Base64.');
+      }catch(e){
+        setStatus('leftStatus', 'Invalid HEX: ' + e.message, true);
+        return;
+      }
+    } else {
+      // strip whitespace for base64
+      base64ToSend = base64ToSend.replace(/\s+/g,'');
+    }
+
+    out.textContent = 'Decoding...';
+
+    try {
+      const res = await fetch('/api/decode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ type, base64: base64ToSend, mode, format })
+      });
+
+      const data = await res.json();
+      if(!res.ok){
+        out.textContent = '';
+        setStatus('rightStatus', (data && data.message) ? data.message : ('HTTP ' + res.status), true);
+        return;
+      }
+
+      out.textContent = data.decoded ?? JSON.stringify(data, null, 2);
+      setStatus('centerStatus', `Mode used: ${data.modeUsed} | Bytes: ${data.messageByteLength}`);
+    } catch (e) {
+      out.textContent = '';
+      setStatus('rightStatus', 'Error: ' + e, true);
+    }
+  }
+
+  loadTypes();
+</script>
+</body>
+</html>
